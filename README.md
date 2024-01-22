@@ -34,7 +34,7 @@ To run the server with Docker Compose, you first need to create a `docker-compos
 ```yaml
 version: "3.8"
 services:
-  palworld-server:
+  palworld:
     image: mbround18/palworld-docker:latest
     environment:
       PRESET: "casual" # Options: casual, normal, hard
@@ -44,6 +44,9 @@ services:
       # And so on...
     ports:
       - "8211:8211" # Default game port
+      - "27015:27015" # steam query port
+    volumes:
+      - "./data:/home/steam/palworld"
 ```
 
 ### Running the Server
