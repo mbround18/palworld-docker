@@ -51,7 +51,7 @@ services:
 To start the server with your chosen configuration, run:
 
 ```bash
-docker-compose up --build
+docker-compose up
 ```
 
 This command builds the Docker image if necessary and starts the server. The `PRESET` environment variable determines the server's configuration preset. You can also override any specific setting by adding it to the `environment` section of the `docker-compose.yml` file.
@@ -71,7 +71,7 @@ To update the server settings after initial setup, modify the `docker-compose.ym
 
 ```bash
 docker-compose down
-docker-compose up --build
+docker-compose up
 ```
 
 This process ensures that your server configuration is always up to date with your specifications.
