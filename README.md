@@ -1,6 +1,8 @@
-# Palworld Server Configuration
+# Palworld Server 
 
-This repository contains a Dockerized application for configuring and running a Palworld server with customizable settings. You can easily switch between different server presets (`casual`, `normal`, `hard`) or manually configure individual settings to tailor the server to your preferences.
+This repository contains a Dockerized application for configuring and running a Palworld server with customizable settings. You can easily choose between different server presets (`casual`, `normal`, `hard`) or manually configure individual settings to tailor the server to your preferences.
+
+> NOTE: WHEN starting your server with a custom configuration, it will be permanent and you cannot change it. this is a bug currently and we are waiting on the devs to fix it. 
 
 ## Prerequisites
 
