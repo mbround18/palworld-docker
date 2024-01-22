@@ -12,10 +12,12 @@ function palworld_update() {
 }
 
 function palworld_configure() {
+    echo "configuring palworld"
     python3 /home/steam/scripts/config.py --output /home/steam/palworld/Pal/Saved/Config/LinuxServer/PalWorldSettings.ini
 }
 
 function palworld_launch() {
+  echo "launching palworld"
   palworld_install
 
   cd ~/palworld || exit 1
@@ -31,7 +33,7 @@ function palworld_launch() {
   fi
 
   if [ -n "${PUBLIC_PORT:-"8211"}" ]; then
-      START_COMMAND="${START_COMMAND} -publiport=${PUBLIC_PORT:"8211"}"
+      START_COMMAND="${START_COMMAND} -publiport=${PUBLIC_PORT:-"8211"}"
   fi
 
   if [ -n "${SERVER_NAME:-"My PalWorld Server"}" ]; then

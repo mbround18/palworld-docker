@@ -6,6 +6,8 @@ services:
       dockerfile: Dockerfile
       platforms:
         - linux/amd64
+    environment:
+      PRESET: "Normal"
     ports:
       - "8211:8211"
       - "27015:27015"
