@@ -1,6 +1,8 @@
-# Palworld Server Configuration
+# Palworld Server 
 
-This repository contains a Dockerized application for configuring and running a Palworld server with customizable settings. You can easily switch between different server presets (`casual`, `normal`, `hard`) or manually configure individual settings to tailor the server to your preferences.
+🌟 Welcome to the ultimate Palworld Server Setup! 🌍 This GitHub repository is your go-to toolkit 🛠️ for launching a Palworld server in a snap using Docker! Choose from preset worlds like 'casual' 🏖️, 'normal' 🌆, or 'hard' 🌋, or dive deep into customization with flexible settings 🎛️.
+
+> NOTE: WHEN starting your server with a custom configuration, it will be permanent and you cannot change it. this is a bug currently and we are waiting on the devs to fix it. 
 
 ## Prerequisites
 
@@ -32,7 +34,7 @@ To run the server with Docker Compose, you first need to create a `docker-compos
 ```yaml
 version: "3.8"
 services:
-  palworld-server:
+  palworld:
     image: mbround18/palworld-docker:latest
     environment:
       PRESET: "casual" # Options: casual, normal, hard
@@ -42,6 +44,9 @@ services:
       # And so on...
     ports:
       - "8211:8211" # Default game port
+      - "27015:27015" # steam query port
+    volumes:
+      - "./data:/home/steam/palworld"
 ```
 
 ### Running the Server
@@ -49,7 +54,7 @@ services:
 To start the server with your chosen configuration, run:
 
 ```bash
-docker-compose up --build
+docker-compose up
 ```
 
 This command builds the Docker image if necessary and starts the server. The `PRESET` environment variable determines the server's configuration preset. You can also override any specific setting by adding it to the `environment` section of the `docker-compose.yml` file.
@@ -69,7 +74,7 @@ To update the server settings after initial setup, modify the `docker-compose.ym
 
 ```bash
 docker-compose down
-docker-compose up --build
+docker-compose up
 ```
 
 This process ensures that your server configuration is always up to date with your specifications.
