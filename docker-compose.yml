@@ -1,0 +1,13 @@
+services:
+  palworld:
+    image: mbround18/palworld-docker:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      platforms:
+        - linux/amd64
+    ports:
+      - "8211:8211"
+      - "27015:27015"
+    volumes:
+      - ./tmp:/home/steam/palworld
