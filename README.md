@@ -6,7 +6,7 @@
 ## !!Notice!! Bug with saves, developers of Palworld working hard to fix!
 
 With the [recent bug on save corruption](https://www.ign.com/articles/palworld-dev-working-to-fix-serious-bugs-including-lost-save-data),
-we highly recommend you backup your save files! [Click here to see how to integrate auto backups.](./docs/compose-with-backups.yaml)
+we highly recommend you backup your save files! [Click here to see how to integrate auto backups.](./docs/compose-with-backups.md)
 
 ## Prerequisites
 
