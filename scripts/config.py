@@ -431,6 +431,10 @@ def main():
 
     # Output to either stdout or a file
     if args.output:
+        # get a dir path of output and create folders if not exists
+        output_dir = os.path.dirname(args.output)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
         with open(args.output, "w") as file:
             file.write(rendered)
     else:
