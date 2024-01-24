@@ -2,6 +2,9 @@
 
 🌟 Welcome to the ultimate Palworld Server Setup! 🌍 This GitHub repository is your go-to toolkit 🛠️ for launching a Palworld server in a snap using Docker! Choose from preset worlds like 'casual' 🏖️, 'normal' 🌆, or 'hard' 🌋, or dive deep into customization with flexible settings 🎛️.
 
+> With the [recent bug on save corruption](https://www.ign.com/articles/palworld-dev-working-to-fix-serious-bugs-including-lost-save-data),
+> we highly recommend you backup your save files! [Click here to see how to integrate auto backups.](./docs/compose-with-backups.yaml)
+
 ## Prerequisites
 
 - Docker
