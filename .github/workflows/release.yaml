@@ -3,6 +3,8 @@ on:
   push:
     tags:
       - '*'
+env:
+  IMAGE_NAME: mbround18/palworld-docker
 
 jobs: 
   release:
@@ -27,9 +29,9 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: name/app            
+          images: ${{ env.IMAGE_NAME }}          
 
-      - name: Build Palworld
+      - name: Build ${{ env.IMAGE_NAME }}
         id: docker_build
         uses: docker/build-push-action@v5
         with:
@@ -37,8 +39,8 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=mbround18/palworld-docker:buildcache
-          cache-to: type=registry,ref=mbround18/palworld-docker:buildcache,mode=max
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache,mode=max
           build-args: |
             "GITHUB_SHA=${GITHUB_SHA}"
             "GITHUB_REF=${GITHUB_REF}"
