@@ -42,6 +42,7 @@ services:
     image: mbround18/palworld-docker:latest
     environment:
       PRESET: "casual" # Options: casual, normal, hard
+      MULTITHREADING: true # Optional, Allows for multithreading the server. 
       # Optionally override specific settings:
       # DAY_TIME_SPEED_RATE: '1'
       # NIGHT_TIME_SPEED_RATE: '1'
