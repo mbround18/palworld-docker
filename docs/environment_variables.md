@@ -25,10 +25,10 @@ Below is a detailed table of configuration options available for customizing the
 | `COLLECTION_OBJECT_RESPAWN_SPEED_RATE`      | Respawn speed rate for collectible objects.               | `1.000000`           |
 | `ENEMY_DROP_ITEM_RATE`                      | Drop rate multiplier for items dropped by enemies.        | `1.200000`           |
 | `DEATH_PENALTY`                             | Specifies the death penalty for players.                  | `None`               |
-| `ENABLE_PLAYER_TO_PLAYER_DAMAGE`            | Enables or disables player-to-player damage.              | `False`              |
-| `ENABLE_FRIENDLY_FIRE`                      | Enables or disables friendly fire.                        | `False`              |
-| `ENABLE_INVADER_ENEMY`                      | Enables or disables invader enemies.                      | `True`               |
-| `ACTIVE_UNKO`                               | Activates or deactivates UNKO.                            | `False`              |
+| `B_ENABLE_PLAYER_TO_PLAYER_DAMAGE`            | Enables or disables player-to-player damage.              | `False`              |
+| `B_ENABLE_FRIENDLY_FIRE`                      | Enables or disables friendly fire.                        | `False`              |
+| `B_ENABLE_INVADER_ENEMY`                      | Enables or disables invader enemies.                      | `True`               |
+| `B_ACTIVE_UNKO`                               | Activates or deactivates UNKO.                            | `False`              |
 | `ENABLE_AIM_ASSIST_PAD`                     | Enables or disables aim assist for gamepads.              | `True`               |
 | `ENABLE_AIM_ASSIST_KEYBOARD`                | Enables or disables aim assist for keyboards.             | `False`              |
 | `DROP_ITEM_MAX_NUM`                         | Maximum number of dropped items in the world.             | `3000`               |
