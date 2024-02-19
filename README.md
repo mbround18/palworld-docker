@@ -48,8 +48,10 @@ services:
       # NIGHT_TIME_SPEED_RATE: '1'
       # And so on...
     ports:
-      - "8211:8211" # Default game port
-      - "27015:27015" # steam query port
+      - "8211:8211/tcp" # Default game port
+      - "8211:8211/udp" # Default game port
+      - "27015:27015/udp" # steam query port
+      - "27015:27015/tcp" # steam query port
     volumes:
       - "./data:/home/steam/palworld"
 ```
