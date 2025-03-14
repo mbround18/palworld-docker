@@ -9,6 +9,6 @@ docker-dev: docker-build
 	@docker compose up --abort-on-container-exit
 
 docker-push: docker-build
-	@docker tag mbround18/palworld-docker:latest mbround18/palworld-docker:$(GIT_TAG)
-	@docker image push mbround18/palworld-docker:$(GIT_TAG)
-	@echo "Pushed mbround18/palworld-docker:$(GIT_TAG)"
+	@docker tag mbround18/palworld-docker:latest mbround18/palworld-docker:sha-$(GIT_TAG)
+	@docker image push mbround18/palworld-docker:sha-$(GIT_TAG)
+	@echo "Pushed mbround18/palworld-docker:sha-$(GIT_TAG)"

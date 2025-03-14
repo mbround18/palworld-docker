@@ -19,12 +19,14 @@ RUN apt-get update                        \
     && gosu nobody true                   \
     && dos2unix
 
-RUN addgroup --system steam     \
-    && adduser --system         \
-      --home /home/steam        \
-      --shell /bin/bash         \
-      steam                     \
-    && usermod -aG steam steam  \
+# Remove any existing user or group with ID 1000
+RUN if getent passwd 1000 > /dev/null; then userdel $(getent passwd 1000 | cut -d: -f1); fi \
+    && if getent group 1000 > /dev/null; then groupdel $(getent group 1000 | cut -d: -f1); fi \
+    && groupadd -g 1000 steam \
+    && useradd -u 1000 -g 1000 \
+      -d /home/steam \
+      -s /bin/bash \
+      -m steam \
     && chmod ugo+rw /tmp/dumps
 
 
@@ -32,9 +34,6 @@ RUN addgroup --system steam     \
 ARG GITHUB_SHA="not-set"
 ARG GITHUB_REF="not-set"
 ARG GITHUB_REPOSITORY="not-set"
-
-ENV PUID=1000
-ENV PGID=1000
 
 RUN echo "steam ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
@@ -65,6 +64,6 @@ WORKDIR /home/steam/palworld
 EXPOSE 8211/udp
 EXPOSE 27015/udp
 
-COPY --from=mbround18/gsm-reference:sha-7f4b7cc /app/palworld /usr/local/bin/palworld
+COPY --from=mbround18/gsm-reference:sha-83ed499 /app/palworld /usr/local/bin/palworld
 
 ENTRYPOINT ["/entrypoint.sh"]
