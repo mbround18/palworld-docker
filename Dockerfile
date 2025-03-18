@@ -64,6 +64,6 @@ WORKDIR /home/steam/palworld
 EXPOSE 8211/udp
 EXPOSE 27015/udp
 
-COPY --from=mbround18/gsm-reference:sha-74c7f24 /app/palworld /usr/local/bin/palworld
+COPY --from=mbround18/gsm-reference:sha-7ec6fa9 /app/palworld /usr/local/bin/palworld
 
 ENTRYPOINT ["/entrypoint.sh"]
