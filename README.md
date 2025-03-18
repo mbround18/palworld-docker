@@ -1,8 +1,8 @@
-# Palworld Server   
+# Palworld Server
 
 [![Managed by GSM](https://img.shields.io/badge/Managed%20By-GSM-blue)](https://github.com/mbround18/game-server-management)
 
-🌟 Welcome to the ultimate Palworld Server Setup! 🌍 This GitHub repository is your go-to toolkit 🛠️ for launching a Palworld server in a snap using Docker! Choose from preset worlds like 'casual' 🏖️, 'normal' 🌆, or 'hard' 🌋, or dive deep into customization with flexible settings 🎛️.
+🌟 Welcome to the ultimate Palworld Server Setup! 🌍 This GitHub repository is your go-to toolkit 🛠️ for launching a Palworld server in a snap using Docker! Choose from preset worlds like 'casual' 🏖️, 'normal' 🌆, or 'hard' 🌋, or dive deep into customization with flexible settings 🎧.
 
 ## !!Notice!! Bug with saves, developers of Palworld working hard to fix!
 
@@ -28,6 +28,7 @@ The server can be configured either through environment variables or by passing 
 Below is a list of available environment variables to customize your server:
 
 #### General Server Settings
+
 - `SERVER_NAME`: The name of your server.
 - `SERVER_DESCRIPTION`: A short description of your server.
 - `PUBLIC_IP`: Set the public IP of the server.
@@ -37,8 +38,10 @@ Below is a list of available environment variables to customize your server:
 - `SERVER_PASSWORD`: The password required to join the server.
 - `REGION`: Define the server’s region.
 - `USE_AUTH`: Enable authentication (`true` or `false`).
+- `WEBHOOK_URL`: Discord webhook URL for server notifications.
 
 #### Performance and Networking
+
 - `MULTITHREADING`: Enable multithreading (`true` or `false`).
 - `RCON_ENABLED`: Enable remote console (`true` or `false`).
 - `RCON_PORT`: Port for RCON access.
@@ -46,7 +49,13 @@ Below is a list of available environment variables to customize your server:
 - `RESTAPI_PORT`: Port for the REST API.
 - `MAX_BUILDING_LIMIT_NUM`: Maximum number of buildings allowed.
 
+#### Auto-Update Configuration
+
+- `AUTO_UPDATE`: Enable automatic server updates (`true` or `false`).
+- `AUTO_UPDATE_SCHEDULE`: Cron job format defining update checks (default: `0 3 * * *` for 3 AM daily updates).
+
 #### Gameplay and Balance
+
 - `EXP_RATE`: Modify experience rate multiplier.
 - `PAL_CAPTURE_RATE`: Adjust the Pal capture success rate.
 - `DAY_TIME_SPEED_RATE`: Adjust how fast daytime progresses.
@@ -65,6 +74,7 @@ Below is a list of available environment variables to customize your server:
 - `AUTO_SAVE_SPAN`: Set the frequency of autosaves (in minutes).
 
 #### Multiplayer and Guild Settings
+
 - `GUILD_PLAYER_MAX_NUM`: Maximum number of players per guild.
 - `BASE_CAMP_MAX_NUM_IN_GUILD`: Maximum number of camps per guild.
 - `ALLOW_CONNECT_PLATFORM`: Restrict platform connections (`Steam`, `Epic`, etc.).
@@ -91,6 +101,9 @@ services:
       PUBLIC_PORT: "8211"
       SERVER_NAME: "My Palworld Server"
       EXP_RATE: "1.5"
+      WEBHOOK_URL: "https://discord.com/api/webhooks/..."
+      AUTO_UPDATE: "true"
+      AUTO_UPDATE_SCHEDULE: "0 3 * * *"
     ports:
       - "8211:8211" # Default game port
       - "27015:27015" # Steam query port
@@ -108,14 +121,21 @@ docker-compose up
 
 This command builds the Docker image if necessary and starts the server. The `PRESET` environment variable determines the server's configuration preset. You can also override any specific setting by adding it to the `environment` section of the `docker-compose.yml` file.
 
-### Custom Configuration
+### Automatic Updates
 
-If you wish to customize the server beyond the provided presets, simply add or modify the environment variables in the `docker-compose.yml` file. For example, to set a custom experience rate, you would add:
+If `AUTO_UPDATE` is enabled, the server will automatically check for updates at the scheduled time (`AUTO_UPDATE_SCHEDULE`). If an update is found, the server will:
 
-```yaml
-environment:
-  EXP_RATE: "1.5"
-```
+1. Stop the running instance.
+2. Download and apply the update.
+3. Restart the server.
+
+### Discord Webhook Notifications
+
+If `WEBHOOK_URL` is set, the server will send notifications for:
+
+- **Server Start & Stop** events.
+- **Player Join & Leave** messages.
+- **Server Updates**.
 
 ## Updating Server Settings
 
@@ -131,4 +151,3 @@ This ensures that your server configuration remains up to date.
 ## Contributions
 
 Contributions to this project are welcome! Please submit a pull request or open an issue for any bugs, features, or improvements.
-
