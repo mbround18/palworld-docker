@@ -1,7 +1,8 @@
-# Palworld Server 
+# Palworld Server   
+
+[![Managed by GSM](https://img.shields.io/badge/Managed%20By-GSM-blue)](https://github.com/mbround18/game-server-management)
 
 🌟 Welcome to the ultimate Palworld Server Setup! 🌍 This GitHub repository is your go-to toolkit 🛠️ for launching a Palworld server in a snap using Docker! Choose from preset worlds like 'casual' 🏖️, 'normal' 🌆, or 'hard' 🌋, or dive deep into customization with flexible settings 🎛️.
-
 
 ## !!Notice!! Bug with saves, developers of Palworld working hard to fix!
 
@@ -22,18 +23,61 @@ The server can be configured either through environment variables or by passing 
 - `normal`
 - `hard`
 
-Additionally, you can customize the following settings:
+### Environment Variables
 
-- `DAY_TIME_SPEED_RATE`: Control the speed of day time.
-- `NIGHT_TIME_SPEED_RATE`: Control the speed of night time.
-- `EXP_RATE`: Experience points rate.
-- (And so on for each configurable option...)
+Below is a list of available environment variables to customize your server:
+
+#### General Server Settings
+- `SERVER_NAME`: The name of your server.
+- `SERVER_DESCRIPTION`: A short description of your server.
+- `PUBLIC_IP`: Set the public IP of the server.
+- `PUBLIC_PORT`: The public port for connections.
+- `PORT`: The internal port of the game server.
+- `ADMIN_PASSWORD`: The password for admin access.
+- `SERVER_PASSWORD`: The password required to join the server.
+- `REGION`: Define the server’s region.
+- `USE_AUTH`: Enable authentication (`true` or `false`).
+
+#### Performance and Networking
+- `MULTITHREADING`: Enable multithreading (`true` or `false`).
+- `RCON_ENABLED`: Enable remote console (`true` or `false`).
+- `RCON_PORT`: Port for RCON access.
+- `RESTAPI_ENABLED`: Enable REST API (`true` or `false`).
+- `RESTAPI_PORT`: Port for the REST API.
+- `MAX_BUILDING_LIMIT_NUM`: Maximum number of buildings allowed.
+
+#### Gameplay and Balance
+- `EXP_RATE`: Modify experience rate multiplier.
+- `PAL_CAPTURE_RATE`: Adjust the Pal capture success rate.
+- `DAY_TIME_SPEED_RATE`: Adjust how fast daytime progresses.
+- `NIGHT_TIME_SPEED_RATE`: Adjust how fast nighttime progresses.
+- `DEATH_PENALTY`: Define what happens on player death.
+- `ENABLE_FAST_TRAVEL`: Allow fast travel (`true` or `false`).
+- `ENABLE_INVADER_ENEMY`: Enable invader enemies (`true` or `false`).
+- `HARDCORE`: Enable hardcore mode (`true` or `false`).
+- `PAL_LOST`: Determine if Pals are lost upon death (`true` or `false`).
+- `ITEM_WEIGHT_RATE`: Adjust item weight multiplier.
+- `PAL_DAMAGE_RATE_ATTACK`: Modify Pal attack damage.
+- `PAL_DAMAGE_RATE_DEFENSE`: Modify Pal defense rate.
+- `PLAYER_DAMAGE_RATE_ATTACK`: Modify player attack damage.
+- `PLAYER_DAMAGE_RATE_DEFENSE`: Modify player defense rate.
+- `WORK_SPEED_RATE`: Adjust work speed multiplier.
+- `AUTO_SAVE_SPAN`: Set the frequency of autosaves (in minutes).
+
+#### Multiplayer and Guild Settings
+- `GUILD_PLAYER_MAX_NUM`: Maximum number of players per guild.
+- `BASE_CAMP_MAX_NUM_IN_GUILD`: Maximum number of camps per guild.
+- `ALLOW_CONNECT_PLATFORM`: Restrict platform connections (`Steam`, `Epic`, etc.).
+- `SHOW_PLAYER_LIST`: Display the online player list (`true` or `false`).
+- `CHAT_POST_LIMIT_PER_MINUTE`: Limit chat messages per minute.
+- `EXIST_PLAYER_AFTER_LOGOUT`: Keep players visible after logout (`true` or `false`).
+- `ENABLE_DEFENSE_OTHER_GUILD_PLAYER`: Enable defense against other guilds (`true` or `false`).
 
 To see a full list of supported configuration options, see the [Environment Configuration Options](./docs/environment_variables.md) page.
 
 ## Using Docker Compose
 
-To run the server with Docker Compose, you first need to create a `docker-compose.yml` file in the root of this repository with the following content:
+To run the server with Docker Compose, create a `docker-compose.yml` file with the following content:
 
 ```yaml
 version: "3.8"
@@ -42,14 +86,14 @@ services:
     image: mbround18/palworld-docker:latest
     environment:
       PRESET: "casual" # Options: casual, normal, hard
-      MULTITHREADING: true # Optional, Allows for multithreading the server. 
-      # Optionally override specific settings:
-      # DAY_TIME_SPEED_RATE: '1'
-      # NIGHT_TIME_SPEED_RATE: '1'
-      # And so on...
+      MULTITHREADING: true # Enables multithreading
+      PUBLIC_IP: "0.0.0.0"
+      PUBLIC_PORT: "8211"
+      SERVER_NAME: "My Palworld Server"
+      EXP_RATE: "1.5"
     ports:
       - "8211:8211" # Default game port
-      - "27015:27015" # steam query port
+      - "27015:27015" # Steam query port
     volumes:
       - "./data:/home/steam/palworld"
 ```
@@ -82,8 +126,9 @@ docker-compose down
 docker-compose up
 ```
 
-This process ensures that your server configuration is always up to date with your specifications.
+This ensures that your server configuration remains up to date.
 
 ## Contributions
 
 Contributions to this project are welcome! Please submit a pull request or open an issue for any bugs, features, or improvements.
+

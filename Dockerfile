@@ -12,22 +12,22 @@ RUN apt-get update                        \
     && apt-get install -y -qq             \
         build-essential                   \
         htop net-tools nano gcc g++ gdb   \
-        netcat curl wget zip unzip        \
+        curl wget zip unzip               \
         cron sudo gosu dos2unix  jq       \
-        tzdata python3 python3-pip        \
+        tzdata                            \
     && rm -rf /var/lib/apt/lists/*        \
     && gosu nobody true                   \
     && dos2unix
 
-RUN addgroup --system steam     \
-    && adduser --system         \
-      --home /home/steam        \
-      --shell /bin/bash         \
-      steam                     \
-    && usermod -aG steam steam  \
+# Remove any existing user or group with ID 1000
+RUN if getent passwd 1000 > /dev/null; then userdel $(getent passwd 1000 | cut -d: -f1); fi \
+    && if getent group 1000 > /dev/null; then groupdel $(getent group 1000 | cut -d: -f1); fi \
+    && groupadd -g 1000 steam \
+    && useradd -u 1000 -g 1000 \
+      -d /home/steam \
+      -s /bin/bash \
+      -m steam \
     && chmod ugo+rw /tmp/dumps
-#COPY --chown=steam:steam /root/.steam /home/steam/.steam
-#COPY --chown=steam:steam /root/.local /home/steam/.local
 
 
 # Container informaiton
@@ -35,12 +35,7 @@ ARG GITHUB_SHA="not-set"
 ARG GITHUB_REF="not-set"
 ARG GITHUB_REPOSITORY="not-set"
 
-ENV PUID=1000
-ENV PGID=1000
-
-RUN usermod -u ${PUID} steam                                \
-    && groupmod -g ${PGID} steam                            \
-    && echo "steam ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+RUN echo "steam ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 USER steam
 
@@ -55,19 +50,20 @@ COPY --chown=${PUID}:${PGID} ./Pipfile ./Pipfile.lock /home/steam/scripts/
 
 ENV PATH="/home/steam/.local/bin:${PATH}"
 
-RUN pip3 install pipenv \
-    && cd /home/steam/scripts \
-    && pipenv install --system --deploy --ignore-pipfile
+COPY --chown=${PUID}:${PGID} ./scripts/entrypoint.sh /entrypoint.sh
 
-COPY --chown=${PUID}:${PGID} ./scripts /home/steam/scripts
+RUN mkdir -p $HOME/.steam \
+    && mkdir -p $HOME/palworld \
+    && ln -s $HOME/.local/share/Steam/steamcmd/linux32 $HOME/.steam/sdk32 \
+    && ln -s $HOME/.local/share/Steam/steamcmd/linux64 $HOME/.steam/sdk64 \
+    && ln -s $HOME/.steam/sdk32/steamclient.so $HOME/.steam/sdk32/steamservice.so || true \
+    && ln -s $HOME/.steam/sdk64/steamclient.so $HOME/.steam/sdk64/steamservice.so || true
 
+WORKDIR /home/steam/palworld
 
 EXPOSE 8211/udp
 EXPOSE 27015/udp
 
-RUN echo "source /home/steam/scripts/utils.sh" >> /home/steam/.bashrc
+COPY --from=mbround18/gsm-reference:sha-7ec6fa9 /app/palworld /usr/local/bin/palworld
 
-#HEALTHCHECK --interval=1m --timeout=3s \
-#    CMD pidof valheim_server.x86_64 || exit 1
-
-ENTRYPOINT ["/bin/bash","/home/steam/scripts/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]

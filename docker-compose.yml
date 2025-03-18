@@ -8,6 +8,8 @@ services:
         - linux/amd64
     environment:
       PRESET: "Normal"
+      SERVER_PASSWORD: "secure-password"
+      ADMIN_PASSWORD: "super-secret-password"
     ports:
       - "8211:8211"
       - "27015:27015"
