@@ -1,10 +1,27 @@
+# -------------------------- #
+# -- Rust build with chef -- #
+# -------------------------- #
+FROM lukemathwalker/cargo-chef:latest-rust-1.95 AS chef
+WORKDIR /app
+
+FROM chef AS planner
+COPY ./Cargo.toml ./Cargo.lock /app/
+COPY ./crates /app/crates
+RUN cargo chef prepare --recipe-path recipe.json
+
+FROM chef AS pals-builder
+COPY --from=planner /app/recipe.json recipe.json
+RUN cargo chef cook --release --recipe-path recipe.json
+COPY ./Cargo.toml ./Cargo.lock /app/
+COPY ./crates /app/crates
+RUN cargo build --release --package pals
+
 # --------------- #
 # -- Steam CMD -- #
 # --------------- #
 FROM steamcmd/steamcmd:ubuntu
 
 ENV TZ=America/Los_Angeles
-ENV PYTHONUNBUFFERED=1
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN apt-get update                        \
@@ -46,11 +63,8 @@ ENV USER=steam
 ENV LD_LIBRARY_PATH="/home/steam/.steam/sdk32:${LD_LIBRARY_PATH}"
 ENV LD_LIBRARY_PATH="/home/steam/.steam/sdk64:${LD_LIBRARY_PATH}"
 
-COPY --chown=${PUID}:${PGID} ./Pipfile ./Pipfile.lock /home/steam/scripts/
-
-ENV PATH="/home/steam/.local/bin:${PATH}"
-
-COPY --chown=${PUID}:${PGID} ./scripts/entrypoint.sh /entrypoint.sh
+COPY --chown=steam:steam ./scripts/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 RUN mkdir -p $HOME/.steam \
     && mkdir -p $HOME/palworld \
@@ -64,6 +78,6 @@ WORKDIR /home/steam/palworld
 EXPOSE 8211/udp
 EXPOSE 27015/udp
 
-COPY --from=mbround18/gsm-reference:sha-7e6d347 /app/palworld /usr/local/bin/palworld
+COPY --from=pals-builder /app/target/release/palworld /usr/local/bin/palworld
 
 ENTRYPOINT ["/entrypoint.sh"]

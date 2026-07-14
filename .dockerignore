@@ -1,0 +1,32 @@
+# VCS
+.git
+.github
+.gitignore
+
+# Rust build artifacts
+target
+**/*.rs.bk
+
+# Runtime/data directories (bind-mounted, not needed for build)
+tmp
+data
+backups
+
+# IDE / editor
+.idea
+*.iml
+.vscode
+
+# Docs and misc project files
+docs
+README.md
+LICENSE
+Makefile
+renovate.json
+.prettierignore
+
+# Docker
+docker-compose*.yaml
+docker-compose*.yml
+Dockerfile*
+.dockerignore

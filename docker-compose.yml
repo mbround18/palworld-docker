@@ -11,7 +11,7 @@ services:
       SERVER_PASSWORD: "secure-password"
       ADMIN_PASSWORD: "super-secret-password"
     ports:
-      - "8211:8211"
-      - "27015:27015"
+      - "8211:8211/udp"
+      - "27015:27015/udp"
     volumes:
       - ./tmp:/home/steam/palworld
