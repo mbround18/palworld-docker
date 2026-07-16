@@ -19,7 +19,7 @@ RUN cargo build --release --package pals
 # --------------- #
 # -- Steam CMD -- #
 # --------------- #
-FROM steamcmd/steamcmd:ubuntu
+FROM steamcmd/steamcmd:ubuntu AS base
 
 ENV TZ=America/Los_Angeles
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
@@ -63,8 +63,9 @@ ENV USER=steam
 ENV LD_LIBRARY_PATH="/home/steam/.steam/sdk32:${LD_LIBRARY_PATH}"
 ENV LD_LIBRARY_PATH="/home/steam/.steam/sdk64:${LD_LIBRARY_PATH}"
 
+COPY --chown=steam:steam ./scripts/install.sh /install.sh
 COPY --chown=steam:steam ./scripts/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN chmod +x /install.sh /entrypoint.sh
 
 RUN mkdir -p $HOME/.steam \
     && mkdir -p $HOME/palworld \
@@ -80,4 +81,17 @@ EXPOSE 27015/udp
 
 COPY --from=pals-builder /app/target/release/palworld /usr/local/bin/palworld
 
+# ------------------------------------------------------------------ #
+# -- Installer image: runs the SteamCMD install and exits.        -- #
+# -- Intended for use as a Kubernetes init container (or similar) -- #
+# -- sharing a volume with the `palworld` target below.           -- #
+# ------------------------------------------------------------------ #
+FROM base AS installer
+ENTRYPOINT ["/install.sh"]
+
+# ------------------------------------------------------------------ #
+# -- Palworld image: installs (if needed), starts, and monitors   -- #
+# -- the server. Safe to run standalone without the installer.    -- #
+# ------------------------------------------------------------------ #
+FROM base AS palworld
 ENTRYPOINT ["/entrypoint.sh"]

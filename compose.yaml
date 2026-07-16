@@ -1,0 +1,37 @@
+services:
+  palworld-installer:
+    image: mbround18/palworld-docker-installer:latest
+    profiles:
+      - build-only
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: installer
+      platforms:
+        - linux/amd64
+      x-bake:
+        tags:
+          - mbround18/palworld-docker-installer:latest
+          - mbround18/palworld-docker-installer:${GIT_TAG:-dev}
+
+  palworld:
+    image: mbround18/palworld-docker:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: palworld
+      platforms:
+        - linux/amd64
+      x-bake:
+        tags:
+          - mbround18/palworld-docker:latest
+          - mbround18/palworld-docker:${GIT_TAG:-dev}
+    environment:
+      PRESET: "Normal"
+      SERVER_PASSWORD: "secure-password"
+      ADMIN_PASSWORD: "super-secret-password"
+    ports:
+      - "8211:8211/udp"
+      - "27015:27015/udp"
+    volumes:
+      - ./tmp:/home/steam/palworld

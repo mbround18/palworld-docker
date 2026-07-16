@@ -214,3 +214,26 @@ fn monitor_command_starts_with_discord_webhook_and_can_be_terminated() {
     child.kill().expect("monitor process should be killable");
     let _ = child.wait().expect("monitor process should exit");
 }
+
+#[test]
+fn lock_is_cleaned_up_on_command_failure() {
+    let name = unique_name("lock-cleanup-fail");
+    let lock = unique_lock();
+
+    // First run fails due to missing container, but acquires and should release the lock
+    let mut cmd1 = Command::cargo_bin("palworld").expect("binary should build");
+    cmd1.args(["--output", "json", "container-start", "--name", &name]);
+    cmd1.env("PALWORLD_LIFECYCLE_LOCK", &lock);
+    cmd1.assert()
+        .code(1)
+        .stderr(predicate::str::contains("\"code\":\"runtime_failure\""));
+
+    // Second run using the same lock path should still report missing container (code 1),
+    // NOT a lock conflict (code 3), proving the lock was correctly dropped and cleaned up.
+    let mut cmd2 = Command::cargo_bin("palworld").expect("binary should build");
+    cmd2.args(["--output", "json", "container-start", "--name", &name]);
+    cmd2.env("PALWORLD_LIFECYCLE_LOCK", &lock);
+    cmd2.assert()
+        .code(1)
+        .stderr(predicate::str::contains("\"code\":\"runtime_failure\""));
+}

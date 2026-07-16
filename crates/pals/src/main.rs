@@ -43,6 +43,14 @@ enum Commands {
         path: PathBuf,
     },
     Start,
+    /// Prints the settings that would currently be generated from the environment,
+    /// formatted for reading (the file on disk is written as one line instead,
+    /// since Palworld's engine can't parse a multi-line `OptionSettings` block).
+    Settings {
+        /// Print the settings as a structured JSON object instead of ini text.
+        #[arg(long)]
+        json: bool,
+    },
     Monitor {
         #[arg(long)]
         update_job: bool,
@@ -123,6 +131,7 @@ fn default_container_spec(name: Option<String>, image: Option<String>) -> Contai
         "MULTITHREADING",
         "AUTO_UPDATE",
         "AUTO_UPDATE_SCHEDULE",
+        "SKIP_VALIDATE",
     ] {
         if let Ok(value) = env::var(key) {
             env_vars.push(format!("{key}={value}"));
@@ -162,13 +171,13 @@ fn lifecycle_lock_path() -> PathBuf {
         .unwrap_or_else(|_| PathBuf::from("/tmp/palworld-lifecycle.lock"))
 }
 
-fn acquire_operation_guard(output: OutputMode) -> OperationGuard {
+fn acquire_operation_guard(output: OutputMode) -> Result<OperationGuard, i32> {
     let lock_path = lifecycle_lock_path();
     match OperationGuard::acquire(&lock_path) {
-        Ok(guard) => guard,
+        Ok(guard) => Ok(guard),
         Err(error) => {
             emit_error(output, ErrorCode::Conflict, error.to_string());
-            exit(3);
+            Err(3)
         }
     }
 }
@@ -395,7 +404,6 @@ mod tests {
     }
 }
 
-#[allow(clippy::too_many_lines)]
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
@@ -403,6 +411,14 @@ async fn main() {
 
     let cli = Cli::parse();
     let output_mode = cli.output;
+    let exit_code = run_app(cli, output_mode).await;
+    if exit_code != 0 {
+        exit(exit_code);
+    }
+}
+
+#[allow(clippy::too_many_lines)]
+async fn run_app(cli: Cli, output_mode: OutputMode) -> i32 {
     let instance_config = InstanceConfig {
         app_id: 2_394_010, // Palworld Steam App ID
         name: name(),
@@ -436,6 +452,7 @@ async fn main() {
             args
         },
         force_windows: false,
+        skip_validate: is_env_var_truthy("SKIP_VALIDATE"),
         launch_mode: gsm_instance::config::LaunchMode::Native,
         working_dir: PathBuf::from("/home/steam/palworld"),
     };
@@ -446,26 +463,111 @@ async fn main() {
 
     match cli.command {
         Commands::Install { path } => {
-            let _guard = acquire_operation_guard(output_mode);
+            let _guard = match acquire_operation_guard(output_mode) {
+                Ok(guard) => guard,
+                Err(exit_code) => return exit_code,
+            };
             info!("Installing Palworld server to: {:?}", path);
+            let config_path = path.join("Pal/Saved/Config/LinuxServer/PalWorldSettings.ini");
+            let is_first_launch = !config_path.exists();
             let inst = instance.lock().await;
             if let Err(e) = inst.install() {
                 emit_error(output_mode, ErrorCode::RuntimeFailure, format!("Installation failed: {e}"));
-                exit(1);
+                return 1;
             } else {
                 debug!("Installation successful.");
-                let config_path = path.join("Pal/Saved/Config/LinuxServer/PalWorldSettings.ini");
                 game_settings::load_or_create_config(&config_path);
+
+                if is_first_launch && !is_env_var_truthy("SKIP_CONFIG_SEED") {
+                    let seed_delay_secs: u64 = fetch_var("CONFIG_SEED_DELAY_SECONDS", "45")
+                        .parse()
+                        .unwrap_or(45);
+                    info!(
+                        "Seeding server configs on first launch: starting server for {}s so it can generate its own default files, then reapplying tracked settings...",
+                        seed_delay_secs
+                    );
+                    match inst.start() {
+                        Ok(mut child) => {
+                            tokio::time::sleep(std::time::Duration::from_secs(seed_delay_secs)).await;
+                            if let Err(e) = inst.stop() {
+                                warn!("Failed to stop server after seeding configs: {e}");
+                            }
+                            let _ = child.wait();
+                            game_settings::load_or_create_config(&config_path);
+                            info!("Config seeding complete.");
+                        }
+                        Err(e) => {
+                            warn!("Failed to start server for config seeding: {e}");
+                        }
+                    }
+                }
+
                 emit_success(output_mode, "Installation completed", None);
             }
         }
+        Commands::Settings { json } => {
+            if json {
+                match game_settings::current_settings_json() {
+                    Ok(value) => {
+                        if output_mode == OutputMode::Json {
+                            emit_success(output_mode, "Current settings", Some(value));
+                        } else {
+                            match serde_json::to_string_pretty(&value) {
+                                Ok(pretty) => println!("{pretty}"),
+                                Err(e) => {
+                                    emit_error(
+                                        output_mode,
+                                        ErrorCode::RuntimeFailure,
+                                        format!("Failed to format settings as JSON: {e}"),
+                                    );
+                                    return 1;
+                                }
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        emit_error(
+                            output_mode,
+                            ErrorCode::RuntimeFailure,
+                            format!("Failed to render settings: {e}"),
+                        );
+                        return 1;
+                    }
+                }
+            } else {
+                match game_settings::render_current_settings_pretty() {
+                    Ok(rendered) => {
+                        if output_mode == OutputMode::Json {
+                            emit_success(
+                                output_mode,
+                                "Current settings",
+                                Some(serde_json::json!({ "settings": rendered })),
+                            );
+                        } else {
+                            println!("{rendered}");
+                        }
+                    }
+                    Err(e) => {
+                        emit_error(
+                            output_mode,
+                            ErrorCode::RuntimeFailure,
+                            format!("Failed to render settings: {e}"),
+                        );
+                        return 1;
+                    }
+                }
+            }
+        }
         Commands::Start => {
-            let _guard = acquire_operation_guard(output_mode);
+            let _guard = match acquire_operation_guard(output_mode) {
+                Ok(guard) => guard,
+                Err(exit_code) => return exit_code,
+            };
             info!("Starting server...");
             let inst = instance.lock().await;
             if let Err(e) = inst.start() {
                 emit_error(output_mode, ErrorCode::RuntimeFailure, format!("Failed to start server: {e}"));
-                exit(1);
+                return 1;
             } else {
                 emit_success(output_mode, "Server started", None);
             }
@@ -497,8 +599,9 @@ async fn main() {
 
             let rules = LogRules::default();
 
-            if let Ok(webhook_url) = env::var("WEBHOOK_URL") {
-                let server_name = env::var("SERVER_NAME").unwrap_or_else(|_| "Palworld Server".to_owned());
+            let webhook_url = fetch_var("WEBHOOK_URL", "");
+            if !webhook_url.is_empty() {
+                let server_name = fetch_var("SERVER_NAME", "Palworld Server");
                 let processor = webhook::ProcessorRegistry::create(webhook_url, server_name).map(Arc::new);
                 let startup_state = Arc::new(StdMutex::new(webhook::StartupState::default()));
                 let shutdown_in_progress = Arc::new(StdMutex::new(false));
@@ -677,14 +780,17 @@ async fn main() {
             begin_cron_loop().await;
         }
         Commands::Stop => {
-            let _guard = acquire_operation_guard(output_mode);
+            let _guard = match acquire_operation_guard(output_mode) {
+                Ok(guard) => guard,
+                Err(exit_code) => return exit_code,
+            };
             warn!("Stopping Palworld server...");
             let inst = instance.lock().await;
             if let Err(e) = inst.stop() {
                 emit_error(output_mode, ErrorCode::RuntimeFailure, format!("Failed to stop: {e}"));
-                exit(1);
+                return 1;
             } else {
-                if env::var("WEBHOOK_URL").is_ok()
+                if !fetch_var("WEBHOOK_URL", "").is_empty()
                     && let Err(e) = send_notifications(StandardServerEvents::Stopped)
                 {
                     warn!("Failed to send webhook notification: {e}");
@@ -694,32 +800,38 @@ async fn main() {
             }
         }
         Commands::Restart => {
-            let _guard = acquire_operation_guard(output_mode);
+            let _guard = match acquire_operation_guard(output_mode) {
+                Ok(guard) => guard,
+                Err(exit_code) => return exit_code,
+            };
             warn!("Restarting Palworld server...");
             let inst = instance.lock().await;
             if let Err(e) = inst.restart() {
                 emit_error(output_mode, ErrorCode::RuntimeFailure, format!("Failed to restart server: {e}"));
-                exit(1);
+                return 1;
             } else {
                 emit_success(output_mode, "Server restarted", None);
             }
         }
         Commands::Update { check } => {
-            let _guard = acquire_operation_guard(output_mode);
+            let _guard = match acquire_operation_guard(output_mode) {
+                Ok(guard) => guard,
+                Err(exit_code) => return exit_code,
+            };
             let inst = instance.lock().await;
             if check {
                 if inst.update_available() {
                     emit_error(output_mode, ErrorCode::RuntimeFailure, "Update available");
-                    exit(1);
+                    return 1;
                 } else {
                     emit_success(output_mode, "Server is up to date", None);
-                    exit(0);
+                    return 0;
                 }
             } else if inst.update_available() {
                 warn!("Update available! Updating...");
                 if let Err(e) = inst.update() {
                     emit_error(output_mode, ErrorCode::RuntimeFailure, format!("Update failed: {e}"));
-                    exit(1);
+                    return 1;
                 } else {
                     emit_success(output_mode, "Server updated", None);
                 }
@@ -728,7 +840,10 @@ async fn main() {
             }
         }
         Commands::Provision { name, image } => {
-            let _guard = acquire_operation_guard(output_mode);
+            let _guard = match acquire_operation_guard(output_mode) {
+                Ok(guard) => guard,
+                Err(exit_code) => return exit_code,
+            };
             let lifecycle = LifecycleManager::new(DockerCliRuntime);
             let spec = default_container_spec(name, image);
             let exit_code = handle_mutation_result(
@@ -738,7 +853,7 @@ async fn main() {
                 lifecycle.provision(&spec),
             );
             if exit_code != 0 {
-                exit(exit_code);
+                return exit_code;
             }
         }
         Commands::Status { name } => {
@@ -746,7 +861,7 @@ async fn main() {
             let spec = default_container_spec(name, None);
             let exit_code = handle_status_result(output_mode, &spec.name, lifecycle.status(&spec.name));
             if exit_code != 0 {
-                exit(exit_code);
+                return exit_code;
             }
         }
         Commands::Logs { name, tail, follow } => {
@@ -770,12 +885,15 @@ async fn main() {
                         ErrorCode::RuntimeFailure,
                         format!("Failed to fetch logs from '{}': {e}", spec.name),
                     );
-                    exit(1);
+                    return 1;
                 }
             }
         }
         Commands::Remove { name, force } => {
-            let _guard = acquire_operation_guard(output_mode);
+            let _guard = match acquire_operation_guard(output_mode) {
+                Ok(guard) => guard,
+                Err(exit_code) => return exit_code,
+            };
             let lifecycle = LifecycleManager::new(DockerCliRuntime);
             let spec = default_container_spec(name, None);
             if let Err(e) = lifecycle.remove(&spec.name, force) {
@@ -784,7 +902,7 @@ async fn main() {
                     ErrorCode::RuntimeFailure,
                     format!("Failed to remove container '{}': {e}", spec.name),
                 );
-                exit(1);
+                return 1;
             }
             emit_success(
                 output_mode,
@@ -793,7 +911,10 @@ async fn main() {
             );
         }
         Commands::ContainerUpdate { name, image } => {
-            let _guard = acquire_operation_guard(output_mode);
+            let _guard = match acquire_operation_guard(output_mode) {
+                Ok(guard) => guard,
+                Err(exit_code) => return exit_code,
+            };
             let lifecycle = LifecycleManager::new(DockerCliRuntime);
             let spec = default_container_spec(name, image);
             let exit_code = handle_mutation_result(
@@ -803,11 +924,14 @@ async fn main() {
                 lifecycle.update(&spec),
             );
             if exit_code != 0 {
-                exit(exit_code);
+                return exit_code;
             }
         }
         Commands::ContainerStart { name } => {
-            let _guard = acquire_operation_guard(output_mode);
+            let _guard = match acquire_operation_guard(output_mode) {
+                Ok(guard) => guard,
+                Err(exit_code) => return exit_code,
+            };
             let lifecycle = LifecycleManager::new(DockerCliRuntime);
             let spec = default_container_spec(name, None);
             let exit_code = handle_mutation_result(
@@ -817,11 +941,14 @@ async fn main() {
                 lifecycle.start(&spec.name),
             );
             if exit_code != 0 {
-                exit(exit_code);
+                return exit_code;
             }
         }
         Commands::ContainerStop { name } => {
-            let _guard = acquire_operation_guard(output_mode);
+            let _guard = match acquire_operation_guard(output_mode) {
+                Ok(guard) => guard,
+                Err(exit_code) => return exit_code,
+            };
             let lifecycle = LifecycleManager::new(DockerCliRuntime);
             let spec = default_container_spec(name, None);
             let exit_code = handle_mutation_result(
@@ -831,11 +958,14 @@ async fn main() {
                 lifecycle.stop(&spec.name),
             );
             if exit_code != 0 {
-                exit(exit_code);
+                return exit_code;
             }
         }
         Commands::ContainerRestart { name } => {
-            let _guard = acquire_operation_guard(output_mode);
+            let _guard = match acquire_operation_guard(output_mode) {
+                Ok(guard) => guard,
+                Err(exit_code) => return exit_code,
+            };
             let lifecycle = LifecycleManager::new(DockerCliRuntime);
             let spec = default_container_spec(name, None);
             let exit_code = handle_mutation_result(
@@ -845,8 +975,9 @@ async fn main() {
                 lifecycle.restart(&spec.name),
             );
             if exit_code != 0 {
-                exit(exit_code);
+                return exit_code;
             }
         }
     }
+    0
 }

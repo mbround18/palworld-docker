@@ -1,10 +1,11 @@
 use env_parse::env_parse;
-use gsm_serde::serde_ini::{IniHeader, to_string};
+use gsm_serde::serde_ini::{IniHeader, to_string, to_string_compact};
+use gsm_shared::fetch_var;
 use ini_derive::IniSerialize;
 use serde::{Deserialize, Serialize};
+use std::fs;
 use std::fs::create_dir_all;
 use std::path::Path;
-use std::{env, fs};
 
 #[derive(Debug, Clone, Copy, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -73,10 +74,12 @@ pub struct GameSettings {
     #[serde(rename = "PlayerDamageRateDefense")]
     pub player_damage_rate_defense: f32,
 
-    #[serde(rename = "PlayerStomachDecreaseRate")]
+    // NB: the engine's own ini key really does spell this "Decreace" — matches
+    // the reference DefaultPalWorldSettings.ini's key, not the correct English.
+    #[serde(rename = "PlayerStomachDecreaceRate")]
     pub player_stomach_decrease_rate: f32,
 
-    #[serde(rename = "PlayerStaminaDecreaseRate")]
+    #[serde(rename = "PlayerStaminaDecreaceRate")]
     pub player_stamina_decrease_rate: f32,
 
     #[serde(rename = "PlayerAutoHPRegeneRate")]
@@ -85,10 +88,10 @@ pub struct GameSettings {
     #[serde(rename = "PlayerAutoHpRegeneRateInSleep")]
     pub player_auto_hp_regen_rate_in_sleep: f32,
 
-    #[serde(rename = "PalStomachDecreaseRate")]
+    #[serde(rename = "PalStomachDecreaceRate")]
     pub pal_stomach_decrease_rate: f32,
 
-    #[serde(rename = "PalStaminaDecreaseRate")]
+    #[serde(rename = "PalStaminaDecreaceRate")]
     pub pal_stamina_decrease_rate: f32,
 
     #[serde(rename = "PalAutoHPRegeneRate")]
@@ -449,18 +452,17 @@ impl Default for GameSettings {
         let mut settings = Self::normal();
 
         // If a PRESET env variable is provided, override our base.
-        if let Ok(preset_str) = env::var("PRESET")
+        let preset_str = fetch_var("PRESET", "");
+        if !preset_str.is_empty()
             && let Ok(preset) = serde_plain::from_str::<Preset>(&preset_str)
         {
             settings.apply_preset(preset);
         }
 
         Self {
-            difficulty: env::var("DIFFICULTY").unwrap_or_else(|_| settings.difficulty.clone()),
-            randomizer_type: env::var("RANDOMIZER_TYPE")
-                .unwrap_or_else(|_| settings.randomizer_type.clone()),
-            randomizer_seed: env::var("RANDOMIZER_SEED")
-                .unwrap_or_else(|_| settings.randomizer_seed.clone()),
+            difficulty: fetch_var("DIFFICULTY", &settings.difficulty),
+            randomizer_type: fetch_var("RANDOMIZER_TYPE", &settings.randomizer_type),
+            randomizer_seed: fetch_var("RANDOMIZER_SEED", &settings.randomizer_seed),
             is_randomizer_pal_level_random: env_parse!(
                 "B_IS_RANDOMIZER_PAL_LEVEL_RANDOM",
                 settings.is_randomizer_pal_level_random,
@@ -589,8 +591,7 @@ impl Default for GameSettings {
                 settings.enemy_drop_item_rate,
                 f32
             ),
-            death_penalty: env::var("DEATH_PENALTY")
-                .unwrap_or_else(|_| settings.death_penalty.clone()),
+            death_penalty: fetch_var("DEATH_PENALTY", &settings.death_penalty),
             enable_pvp: env_parse!("ENABLE_PVP", settings.enable_pvp, bool),
             enable_friendly_fire: env_parse!(
                 "ENABLE_FRIENDLY_FIRE",
@@ -704,20 +705,17 @@ impl Default for GameSettings {
                 settings.server_player_max_num,
                 u16
             ),
-            server_name: env::var("SERVER_NAME").unwrap_or_else(|_| settings.server_name.clone()),
-            server_description: env::var("SERVER_DESCRIPTION")
-                .unwrap_or_else(|_| settings.server_description.clone()),
-            admin_password: env::var("ADMIN_PASSWORD")
-                .unwrap_or_else(|_| settings.admin_password.clone()),
-            server_password: env::var("SERVER_PASSWORD")
-                .unwrap_or_else(|_| settings.server_password.clone()),
+            server_name: fetch_var("SERVER_NAME", &settings.server_name),
+            server_description: fetch_var("SERVER_DESCRIPTION", &settings.server_description),
+            admin_password: fetch_var("ADMIN_PASSWORD", &settings.admin_password),
+            server_password: fetch_var("SERVER_PASSWORD", &settings.server_password),
             public_port: env_parse!("PUBLIC_PORT", settings.public_port, u16),
-            public_ip: env::var("PUBLIC_IP").unwrap_or_else(|_| settings.public_ip.clone()),
+            public_ip: fetch_var("PUBLIC_IP", &settings.public_ip),
             rcon_enabled: env_parse!("RCON_ENABLED", settings.rcon_enabled, bool),
             rcon_port: env_parse!("RCON_PORT", settings.rcon_port, u16),
             use_auth: env_parse!("USE_AUTH", settings.use_auth, bool),
-            region: env_parse!("REGION", settings.region, String),
-            ban_list_url: env::var("BAN_LIST").unwrap_or_else(|_| settings.ban_list_url.clone()),
+            region: fetch_var("REGION", &settings.region),
+            ban_list_url: fetch_var("BAN_LIST", &settings.ban_list_url),
             restapi_enabled: env_parse!("RESTAPI_ENABLED", settings.restapi_enabled, bool),
             restapi_port: env_parse!("RESTAPI_PORT", settings.restapi_port, u16),
             show_player_list: env_parse!("SHOW_PLAYER_LIST", settings.show_player_list, bool),
@@ -726,15 +724,13 @@ impl Default for GameSettings {
                 settings.chat_post_limit_per_minute,
                 u16
             ),
-            crossplay_platforms: env::var("CROSSPLAY_PLATFORMS")
-                .unwrap_or_else(|_| settings.crossplay_platforms.clone()),
+            crossplay_platforms: fetch_var("CROSSPLAY_PLATFORMS", &settings.crossplay_platforms),
             is_use_backup_save_data: env_parse!(
                 "IS_USE_BACKUP_SAVE_DATA",
                 settings.is_use_backup_save_data,
                 bool
             ),
-            log_format_type: env::var("LOG_FORMAT_TYPE")
-                .unwrap_or_else(|_| settings.log_format_type.clone()),
+            log_format_type: fetch_var("LOG_FORMAT_TYPE", &settings.log_format_type),
             supply_drop_span: env_parse!("SUPPLY_DROP_SPAN", settings.supply_drop_span, f32),
             enable_predator_boss_pal: env_parse!(
                 "ENABLE_PREDATOR_BOSS_PAL",
@@ -756,8 +752,12 @@ impl Default for GameSettings {
 }
 
 /// Saves the configuration to an INI file.
+///
+/// Written on one line: Palworld's engine fails to parse a multi-line
+/// `OptionSettings=(...)` block, so this must stay compact even though it's
+/// harder to read. Use `palworld settings` to view it formatted.
 pub fn save_config(path: &Path, settings: &Settings) {
-    let ini_config = match to_string(&settings) {
+    let ini_config = match to_string_compact(&settings) {
         Ok(config) => config,
         Err(error) => {
             eprintln!("Failed to serialize config: {error}");
@@ -768,6 +768,28 @@ pub fn save_config(path: &Path, settings: &Settings) {
     if let Err(e) = fs::write(path, ini_config) {
         eprintln!("Failed to save config: {e}");
     }
+}
+
+/// Renders the settings that would currently be generated from the environment,
+/// formatted for human reading (one entry per line) rather than the compact,
+/// one-line form written to disk.
+///
+/// # Errors
+///
+/// Returns an error when `serde_json` conversion of the settings fails.
+pub fn render_current_settings_pretty() -> Result<String, serde_json::Error> {
+    to_string(&Settings::default())
+}
+
+/// Returns the settings that would currently be generated from the environment
+/// as a structured JSON value (one field per game setting), for callers that
+/// want to consume them programmatically rather than as ini text.
+///
+/// # Errors
+///
+/// Returns an error when `serde_json` conversion of the settings fails.
+pub fn current_settings_json() -> Result<serde_json::Value, serde_json::Error> {
+    serde_json::to_value(GameSettings::default())
 }
 
 /// Loads the configuration from an INI file or returns defaults if the file is missing.
@@ -810,6 +832,8 @@ mod tests {
             "PAL_CAPTURE_RATE",
             "PRESET",
             "SERVER_NAME",
+            "ADMIN_PASSWORD",
+            "SERVER_PASSWORD",
         ];
         for var in &vars {
             unsafe { env::remove_var(var) };
@@ -876,6 +900,25 @@ mod tests {
     }
 
     #[test]
+    fn test_env_variable_quoted_values_are_unwrapped() {
+        let _lock = TEST_MUTEX.lock().unwrap();
+
+        clear_env_vars();
+        unsafe {
+            // Mirrors docker-compose's `${VAR:-"default"}` syntax, which does
+            // not strip the quotes the way a shell would.
+            env::set_var("ADMIN_PASSWORD", "\"super-secret-password\"");
+            env::set_var("EXP_RATE", "\"3.5\"");
+        }
+
+        let settings = GameSettings::default();
+        assert_eq!(settings.admin_password, "super-secret-password");
+        assert_eq!(settings.exp_rate, 3.5);
+
+        clear_env_vars();
+    }
+
+    #[test]
     fn test_preset_with_env_override() {
         let _lock = TEST_MUTEX.lock().unwrap();
 
@@ -908,5 +951,173 @@ mod tests {
         let loaded_settings = load_or_create_config(&test_path);
         assert_eq!(loaded_settings.server_name, "Default Palworld Server");
         assert_eq!(loaded_settings.exp_rate, 1.0);
+    }
+
+    #[test]
+    fn test_save_config_writes_option_settings_on_one_line() {
+        let _lock = TEST_MUTEX.lock().unwrap();
+
+        clear_env_vars();
+        let test_path = Path::new(TEST_DIR).join("test_config_compact.ini");
+        fs::create_dir_all(TEST_DIR).unwrap();
+
+        let settings = Settings::default();
+        save_config(&test_path, &settings);
+
+        let contents = fs::read_to_string(&test_path).unwrap();
+        // Palworld's engine can't parse a multi-line OptionSettings block, so
+        // the saved file must be exactly: header line + one OptionSettings line.
+        assert_eq!(contents.lines().count(), 2);
+        assert!(contents.lines().nth(1).unwrap().starts_with("OptionSettings=("));
+        assert!(contents.trim_end().ends_with(')'));
+    }
+
+    /// A real `DefaultPalWorldSettings.ini` shipped by the Palworld 1.0 dedicated
+    /// server (copied read-only into `resources/`; these tests only read it).
+    const REFERENCE_DEFAULT_INI: &str =
+        include_str!("../resources/DefaultPalWorldSettings.ini");
+
+    /// Confirms the reference file itself keeps `OptionSettings=(...)` on one
+    /// line with no newline between the opening `(` and its matching `)` —
+    /// the actual engine-shipped format we're matching, not just something we
+    /// assumed. If this ever fails, the fixture no longer represents what the
+    /// engine writes and `save_config`'s one-line requirement should be
+    /// re-checked against a fresh copy.
+    #[test]
+    fn reference_default_ini_keeps_option_settings_on_one_line() {
+        let option_settings_lines: Vec<&str> = REFERENCE_DEFAULT_INI
+            .lines()
+            .filter(|line| line.starts_with("OptionSettings=("))
+            .collect();
+
+        assert_eq!(
+            option_settings_lines.len(),
+            1,
+            "expected exactly one line starting with OptionSettings=(, meaning the whole \
+             block including its closing ')' is on that same line"
+        );
+        assert!(option_settings_lines[0].trim_end().ends_with(')'));
+    }
+
+    /// Our own `save_config` output must have the identical shape: one line
+    /// for `OptionSettings=(...)`, matching the reference file's format
+    /// checked above, rather than something we only assumed the engine wants.
+    #[test]
+    fn save_config_output_matches_reference_one_line_shape() {
+        let _lock = TEST_MUTEX.lock().unwrap();
+
+        clear_env_vars();
+        let test_path = Path::new(TEST_DIR).join("test_config_matches_reference_shape.ini");
+        fs::create_dir_all(TEST_DIR).unwrap();
+        save_config(&test_path, &Settings::default());
+        let ours = fs::read_to_string(&test_path).unwrap();
+
+        let reference_option_settings_lines = REFERENCE_DEFAULT_INI
+            .lines()
+            .filter(|line| line.starts_with("OptionSettings=("))
+            .count();
+        let our_option_settings_lines = ours
+            .lines()
+            .filter(|line| line.starts_with("OptionSettings=("))
+            .count();
+
+        assert_eq!(reference_option_settings_lines, 1);
+        assert_eq!(
+            our_option_settings_lines, reference_option_settings_lines,
+            "our OptionSettings block must be on one line like the engine's own default ini"
+        );
+    }
+
+    /// Extracts the top-level `Key=value` entries from a reference ini's
+    /// `OptionSettings=(...)` body, splitting on commas at paren/quote depth 0
+    /// so that values like `CrossplayPlatforms=(Steam,Xbox,PS5,Mac)` or
+    /// `ServerDescription="a, b"` aren't split apart.
+    fn reference_option_keys(ini: &str) -> Vec<String> {
+        let body = ini
+            .lines()
+            .find_map(|line| line.strip_prefix("OptionSettings=("))
+            .and_then(|rest| rest.strip_suffix(')'))
+            .expect("fixture must contain a single-line OptionSettings=(...) block");
+
+        let mut keys = Vec::new();
+        let mut depth = 0i32;
+        let mut in_quotes = false;
+        let mut entry_start = 0usize;
+        let chars: Vec<char> = body.chars().collect();
+        for (i, &c) in chars.iter().enumerate() {
+            match c {
+                '"' => in_quotes = !in_quotes,
+                '(' if !in_quotes => depth += 1,
+                ')' if !in_quotes => depth -= 1,
+                ',' if !in_quotes && depth == 0 => {
+                    let entry: String = chars[entry_start..i].iter().collect();
+                    if let Some(key) = entry.split('=').next() {
+                        keys.push(key.to_owned());
+                    }
+                    entry_start = i + 1;
+                }
+                _ => {}
+            }
+        }
+        let last: String = chars[entry_start..].iter().collect();
+        if let Some(key) = last.split('=').next() {
+            keys.push(key.to_owned());
+        }
+        keys
+    }
+
+    /// Every field we serialize must exist under the exact same key in the
+    /// engine's own shipped defaults. This catches drift like a field being
+    /// renamed to "fix" what looks like a typo, when the engine's actual ini
+    /// key has kept the typo (e.g. `PlayerStomachDecreaceRate`, not
+    /// `...DecreaseRate`) — a mismatch here means the value is silently
+    /// dropped by the game and the engine's own default is used instead.
+    #[test]
+    fn all_serialized_fields_exist_in_reference_default_ini() {
+        let reference_keys = reference_option_keys(REFERENCE_DEFAULT_INI);
+
+        let settings = GameSettings::normal();
+        let value = serde_json::to_value(&settings).unwrap();
+        let serde_json::Value::Object(map) = value else {
+            panic!("GameSettings should serialize to a JSON object");
+        };
+
+        let mut missing = Vec::new();
+        for key in map.keys() {
+            if !reference_keys.iter().any(|reference_key| reference_key == key) {
+                missing.push(key.clone());
+            }
+        }
+
+        assert!(
+            missing.is_empty(),
+            "these fields don't match any key in the reference DefaultPalWorldSettings.ini \
+             (renamed/typo'd relative to what the engine actually expects?): {missing:?}"
+        );
+    }
+
+    /// Documents (without failing) the settings Palworld 1.0 ships that our
+    /// `GameSettings` doesn't model yet, so new-field coverage gaps are visible
+    /// rather than silently absent.
+    #[test]
+    fn reference_default_ini_fields_not_yet_modeled() {
+        let reference_keys = reference_option_keys(REFERENCE_DEFAULT_INI);
+
+        let settings = GameSettings::normal();
+        let value = serde_json::to_value(&settings).unwrap();
+        let serde_json::Value::Object(map) = value else {
+            panic!("GameSettings should serialize to a JSON object");
+        };
+
+        let unmodeled: Vec<&String> = reference_keys
+            .iter()
+            .filter(|key| !map.contains_key(key.as_str()))
+            .collect();
+
+        println!(
+            "{} of {} reference fields are not yet modeled in GameSettings: {unmodeled:?}",
+            unmodeled.len(),
+            reference_keys.len()
+        );
     }
 }
