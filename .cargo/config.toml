@@ -1,0 +1,2 @@
+[alias]
+cov = "llvm-cov --workspace --all-features"

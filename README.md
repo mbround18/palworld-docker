@@ -105,8 +105,8 @@ services:
       AUTO_UPDATE: "true"
       AUTO_UPDATE_SCHEDULE: "0 3 * * *"
     ports:
-      - "8211:8211" # Default game port
-      - "27015:27015" # Steam query port
+      - "8211:8211/udp" # Default game port
+      - "27015:27015/udp" # Steam query port
     volumes:
       - "./data:/home/steam/palworld"
 ```
@@ -133,9 +133,18 @@ If `AUTO_UPDATE` is enabled, the server will automatically check for updates at 
 
 If `WEBHOOK_URL` is set, the server will send notifications for:
 
-- **Server Start & Stop** events.
-- **Player Join & Leave** messages.
+- **Server lifecycle events** (`Started`, `Stopping`, `Stopped`).
+- **Player Connected, Join & Leave** messages.
 - **Server Updates**.
+
+Startup notifications are emitted when monitor logs reach `Running Palworld dedicated server on ...` after `Shutdown handler: initialize.`, and include the detected game version (`Game version is v...`) plus engine build line (`+++UE5+Release-...`) when available.
+
+Player webhook notifications are privacy-filtered to include only:
+
+- **Player display name**
+- **Connection event timestamp**
+
+No player ID, user ID, Steam ID, or IP address is sent in webhook payloads.
 
 ## Updating Server Settings
 

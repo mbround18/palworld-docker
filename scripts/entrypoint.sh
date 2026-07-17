@@ -33,27 +33,24 @@ fi
 echo "🔍 Checking permissions for /home/steam/palworld..."
 ls -ld /home/steam/palworld
 
-echo "🔄 Updating ownership to match user..."
-sudo chown -R "$(id -u):$(id -g)" /home/steam/palworld 2>/dev/null || true
-
 # ───────────────────────────────────────────────────────────
-# Setup and Initialization
+# Install / validate
 # ───────────────────────────────────────────────────────────
+# Safe to call even if a k8s/compose init container using the
+# `installer` image target already installed the server into the
+# shared volume; SteamCMD validates and skips files that are current.
+#
+# Run in the background and `wait` on it (rather than a plain foreground
+# call) so that PID 1 stays responsive to SIGTERM/SIGINT the whole time and
+# `docker stop` doesn't have to wait out the full grace period + SIGKILL if
+# install.sh is still running (or stuck).
+INSTALL_PID=""
+trap 'echo "🛑 Received termination signal during install, stopping..."; [ -n "$INSTALL_PID" ] && kill -TERM "$INSTALL_PID" 2>/dev/null; wait "$INSTALL_PID" 2>/dev/null; exit 143' SIGTERM SIGINT
 
-echo "🧹 Cleaning up cache..."
-rm -rf /home/steam/.cache
-
-echo "📦 Ensuring necessary directories exist..."
-mkdir -p /home/steam/palworld
-mkdir -p /home/steam/palworld/logs
-
-echo "🔧 Running SteamCMD to ensure dependencies are up to date..."
-steamcmd +quit
-
-# ───────────────────────────────────────────────────────────
-# Install (if necessary)
-# ───────────────────────────────────────────────────────────
-palworld install
+/install.sh &
+INSTALL_PID=$!
+wait "$INSTALL_PID"
+trap - SIGTERM SIGINT
 
 # ───────────────────────────────────────────────────────────
 # Start the Palworld Server
@@ -69,8 +66,11 @@ echo "📡 Monitoring Palworld server logs..."
 palworld monitor &
 MONITOR_PID=$!
 
-# Set trap to run cleanup and kill the monitor process if needed
-trap 'palworld stop; kill $MONITOR_PID' SIGTERM SIGINT ERR
+# Set trap to run cleanup and kill the monitor process if needed.
+# Deliberately not trapping ERR here: `kill $MONITOR_PID` is expected to
+# fail once the monitor is already gone, and under `set -e` an ERR trap
+# would re-fire this same handler, running `palworld stop` a second time.
+trap 'palworld stop; kill $MONITOR_PID 2>/dev/null || true' SIGTERM SIGINT
 
 # Wait for the monitor process to exit
 wait $MONITOR_PID
