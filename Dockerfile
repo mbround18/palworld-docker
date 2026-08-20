@@ -33,8 +33,7 @@ RUN apt-get update                        \
         cron sudo gosu dos2unix  jq       \
         tzdata                            \
     && rm -rf /var/lib/apt/lists/*        \
-    && gosu nobody true                   \
-    && dos2unix
+    && gosu nobody true
 
 # Remove any existing user or group with ID 1000
 RUN if getent passwd 1000 > /dev/null; then userdel $(getent passwd 1000 | cut -d: -f1); fi \
