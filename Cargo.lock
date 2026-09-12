@@ -777,7 +777,7 @@ dependencies = [
 [[package]]
 name = "gsm-instance"
 version = "0.1.0"
-source = "git+https://github.com/mbround18/game-server-management?rev=2daf559#2daf559b9ba804153d1305dd2a7e8eb44723a2e3"
+source = "git+https://github.com/mbround18/game-server-management?rev=8fd38ea91388a5a3cfa9354b8bf74cbc13b3bbcf#8fd38ea91388a5a3cfa9354b8bf74cbc13b3bbcf"
 dependencies = [
  "daemonize",
  "flate2",
