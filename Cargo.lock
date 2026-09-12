@@ -764,11 +764,11 @@ checksum = "0cc23270f6e1808e30a928bdc84dea0b9b4136a8bc82338574f23baf47bbd280"
 [[package]]
 name = "gsm-cron"
 version = "0.1.0"
-source = "git+https://github.com/mbround18/game-server-management?rev=2daf559#2daf559b9ba804153d1305dd2a7e8eb44723a2e3"
+source = "git+https://github.com/mbround18/game-server-management?rev=8fd38ea91388a5a3cfa9354b8bf74cbc13b3bbcf#8fd38ea91388a5a3cfa9354b8bf74cbc13b3bbcf"
 dependencies = [
  "chrono",
  "cron",
- "gsm-shared",
+ "gsm-shared 0.1.0 (git+https://github.com/mbround18/game-server-management?rev=8fd38ea91388a5a3cfa9354b8bf74cbc13b3bbcf)",
  "nix",
  "tokio",
  "tracing",
@@ -803,7 +803,7 @@ version = "0.1.0"
 source = "git+https://github.com/mbround18/game-server-management?rev=2daf559#2daf559b9ba804153d1305dd2a7e8eb44723a2e3"
 dependencies = [
  "fs_extra",
- "gsm-shared",
+ "gsm-shared 0.1.0 (git+https://github.com/mbround18/game-server-management?rev=2daf559)",
  "regex",
  "reqwest 0.12.28",
  "tempfile",
@@ -827,7 +827,7 @@ name = "gsm-notifications"
 version = "0.1.0"
 source = "git+https://github.com/mbround18/game-server-management?rev=2daf559#2daf559b9ba804153d1305dd2a7e8eb44723a2e3"
 dependencies = [
- "gsm-shared",
+ "gsm-shared 0.1.0 (git+https://github.com/mbround18/game-server-management?rev=2daf559)",
  "reqwest 0.13.4",
  "serde",
  "serde_json",
@@ -848,6 +848,20 @@ dependencies = [
 name = "gsm-shared"
 version = "0.1.0"
 source = "git+https://github.com/mbround18/game-server-management?rev=2daf559#2daf559b9ba804153d1305dd2a7e8eb44723a2e3"
+dependencies = [
+ "cached",
+ "md5",
+ "reqwest 0.12.28",
+ "serde",
+ "tempfile",
+ "tracing",
+ "walkdir",
+]
+
+[[package]]
+name = "gsm-shared"
+version = "0.1.0"
+source = "git+https://github.com/mbround18/game-server-management?rev=8fd38ea91388a5a3cfa9354b8bf74cbc13b3bbcf#8fd38ea91388a5a3cfa9354b8bf74cbc13b3bbcf"
 dependencies = [
  "cached",
  "md5",
@@ -1577,7 +1591,7 @@ dependencies = [
  "gsm-monitor",
  "gsm-notifications",
  "gsm-serde",
- "gsm-shared",
+ "gsm-shared 0.1.0 (git+https://github.com/mbround18/game-server-management?rev=2daf559)",
  "ini-derive",
  "lazy_static",
  "predicates",
