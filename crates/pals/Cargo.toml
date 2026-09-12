@@ -13,7 +13,7 @@ clap = { version = "4.6.1", features = ["derive"] }
 gsm-instance = { git = "https://github.com/mbround18/game-server-management", rev = "2daf559", package = "gsm-instance" }
 gsm-cron = { git = "https://github.com/mbround18/game-server-management", rev = "2daf559", package = "gsm-cron" }
 gsm-shared = { git = "https://github.com/mbround18/game-server-management", rev = "2daf559", package = "gsm-shared" }
-gsm-monitor = { git = "https://github.com/mbround18/game-server-management", rev = "2daf559", package = "gsm-monitor" }
+gsm-monitor = { git = "https://github.com/mbround18/game-server-management", rev = "8fd38ea91388a5a3cfa9354b8bf74cbc13b3bbcf", package = "gsm-monitor" }
 gsm-notifications = { git = "https://github.com/mbround18/game-server-management", rev = "2daf559", package = "gsm-notifications" }
 gsm-mod-manager = { git = "https://github.com/mbround18/game-server-management", rev = "2daf559", package = "gsm-mod-manager" }
 env-parse = { git = "https://github.com/mbround18/game-server-management", rev = "2daf559", package = "env-parse" }
