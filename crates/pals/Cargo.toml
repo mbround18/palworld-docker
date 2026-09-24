@@ -11,7 +11,7 @@ path = "src/main.rs"
 [dependencies]
 clap = { version = "4.6.1", features = ["derive"] }
 gsm-instance = { git = "https://github.com/mbround18/game-server-management", rev = "2daf559", package = "gsm-instance" }
-gsm-cron = { git = "https://github.com/mbround18/game-server-management", rev = "2daf559", package = "gsm-cron" }
+gsm-cron = { git = "https://github.com/mbround18/game-server-management", rev = "d9f532c49d8ddb21eb0eb6ce24aa980ac0d74dd9", package = "gsm-cron" }
 gsm-shared = { git = "https://github.com/mbround18/game-server-management", rev = "2daf559", package = "gsm-shared" }
 gsm-monitor = { git = "https://github.com/mbround18/game-server-management", rev = "2daf559", package = "gsm-monitor" }
 gsm-notifications = { git = "https://github.com/mbround18/game-server-management", rev = "2daf559", package = "gsm-notifications" }
