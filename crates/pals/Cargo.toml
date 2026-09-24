@@ -16,7 +16,7 @@ gsm-shared = { git = "https://github.com/mbround18/game-server-management", rev 
 gsm-monitor = { git = "https://github.com/mbround18/game-server-management", rev = "2daf559", package = "gsm-monitor" }
 gsm-notifications = { git = "https://github.com/mbround18/game-server-management", rev = "2daf559", package = "gsm-notifications" }
 gsm-mod-manager = { git = "https://github.com/mbround18/game-server-management", rev = "2daf559", package = "gsm-mod-manager" }
-env-parse = { git = "https://github.com/mbround18/game-server-management", rev = "2daf559", package = "env-parse" }
+env-parse = { git = "https://github.com/mbround18/game-server-management", rev = "d9f532c49d8ddb21eb0eb6ce24aa980ac0d74dd9", package = "env-parse" }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.150"
 gsm-serde = { git = "https://github.com/mbround18/game-server-management", rev = "2daf559", package = "gsm-serde" }
