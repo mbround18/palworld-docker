@@ -768,7 +768,7 @@ source = "git+https://github.com/mbround18/game-server-management?rev=2daf559#2d
 dependencies = [
  "chrono",
  "cron",
- "gsm-shared",
+ "gsm-shared 0.1.0 (git+https://github.com/mbround18/game-server-management?rev=2daf559)",
  "nix",
  "tokio",
  "tracing",
@@ -800,10 +800,10 @@ dependencies = [
 [[package]]
 name = "gsm-mod-manager"
 version = "0.1.0"
-source = "git+https://github.com/mbround18/game-server-management?rev=2daf559#2daf559b9ba804153d1305dd2a7e8eb44723a2e3"
+source = "git+https://github.com/mbround18/game-server-management?rev=d9f532c49d8ddb21eb0eb6ce24aa980ac0d74dd9#d9f532c49d8ddb21eb0eb6ce24aa980ac0d74dd9"
 dependencies = [
  "fs_extra",
- "gsm-shared",
+ "gsm-shared 0.1.0 (git+https://github.com/mbround18/game-server-management?rev=d9f532c49d8ddb21eb0eb6ce24aa980ac0d74dd9)",
  "regex",
  "reqwest 0.12.28",
  "tempfile",
@@ -827,7 +827,7 @@ name = "gsm-notifications"
 version = "0.1.0"
 source = "git+https://github.com/mbround18/game-server-management?rev=2daf559#2daf559b9ba804153d1305dd2a7e8eb44723a2e3"
 dependencies = [
- "gsm-shared",
+ "gsm-shared 0.1.0 (git+https://github.com/mbround18/game-server-management?rev=2daf559)",
  "reqwest 0.13.4",
  "serde",
  "serde_json",
@@ -848,6 +848,20 @@ dependencies = [
 name = "gsm-shared"
 version = "0.1.0"
 source = "git+https://github.com/mbround18/game-server-management?rev=2daf559#2daf559b9ba804153d1305dd2a7e8eb44723a2e3"
+dependencies = [
+ "cached",
+ "md5",
+ "reqwest 0.12.28",
+ "serde",
+ "tempfile",
+ "tracing",
+ "walkdir",
+]
+
+[[package]]
+name = "gsm-shared"
+version = "0.1.0"
+source = "git+https://github.com/mbround18/game-server-management?rev=d9f532c49d8ddb21eb0eb6ce24aa980ac0d74dd9#d9f532c49d8ddb21eb0eb6ce24aa980ac0d74dd9"
 dependencies = [
  "cached",
  "md5",
@@ -1577,7 +1591,7 @@ dependencies = [
  "gsm-monitor",
  "gsm-notifications",
  "gsm-serde",
- "gsm-shared",
+ "gsm-shared 0.1.0 (git+https://github.com/mbround18/game-server-management?rev=2daf559)",
  "ini-derive",
  "lazy_static",
  "predicates",
