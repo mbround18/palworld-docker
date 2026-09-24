@@ -816,7 +816,7 @@ dependencies = [
 [[package]]
 name = "gsm-monitor"
 version = "0.1.0"
-source = "git+https://github.com/mbround18/game-server-management?rev=2daf559#2daf559b9ba804153d1305dd2a7e8eb44723a2e3"
+source = "git+https://github.com/mbround18/game-server-management?rev=d9f532c49d8ddb21eb0eb6ce24aa980ac0d74dd9#d9f532c49d8ddb21eb0eb6ce24aa980ac0d74dd9"
 dependencies = [
  "log",
  "tracing",
